@@ -108,6 +108,7 @@ const infoBtn = document.getElementById("infoBtn");
 const fromCard = document.getElementById("fromCard");
 const toCard = document.getElementById("toCard");
 const translationCard = document.getElementById("translationText");
+const explanationCard = document.getElementById("explanationText");
 
 // ------------------------------
 // UPDATE HEADER
@@ -196,26 +197,40 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
 
   // Show loading
   translationCard.textContent = "Translating...";
-  explanationCard.textContent = "Explaining...";
+  explanationCard.textContent = "Translating...";
+
+  const noMeaning = NO_MEANING_TEXT[translationLanguage] || "No clear meaning";
 
   try {
-    // Call backend now
-    const res = await fetch("/translate", {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": 'Bearer ${process.env.OPENROUTER_API_KEY}'
+      },
       body: JSON.stringify({
-        input: input,
-        fromLang: testerLanguage,
-        toLang: translationLanguage
+        model: "deepseek/deepseek-r1-0528:free",
+        messages: [
+          {
+            role: "system",
+            content: `Translate from ${testerLanguage} to ${translationLanguage}.
+                      Give ONLY the plain translation in the first line.
+                      Then give a clear explanation in plain text.
+                      Do NOT include markdown or special formatting.
+                      If the word does not exist, say '${noMeaning}'.`
+          },
+          { role: "user", content: input }
+        ]
       })
     });
 
     const data = await res.json();
-    const result = data.result || "No clear meaning";
+    const result = data.choices[0].message.content;
 
     // Split into translation + explanation
-    translationCard.textContent = result.trim() || "No clear meaning";
-
+    const lines = result.split("\n").filter(l => l.trim());
+    translationCard.textContent = lines[0] || noMeaning;
+    explanationCard.textContent = lines.slice(1).join("\n") || noMeaning;
 
   } catch (err) {
     console.error(err);
@@ -223,7 +238,3 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
     explanationCard.textContent = "";
   }
 });
-
-
-
-
