@@ -206,7 +206,7 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": 'Bearer ${process.env.OPENROUTER_API_KEY}'
+        "Authorization": 'Bearer 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'
       },
       body: JSON.stringify({
         model: "deepseek/deepseek-r1-0528:free",
@@ -238,3 +238,4 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
     explanationCard.textContent = "";
   }
 });
+
